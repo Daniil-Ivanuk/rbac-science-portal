@@ -1,0 +1,32 @@
+{
+  "name": "@kep4yk/rbac-jwt-core",
+  "version": "1.0.0",
+  "description": "JWT-based access control (RBAC) system core",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "rbac",
+    "jwt",
+    "authorization",
+    "access-control"
+  ],
+  "author": "Daniil-Ivanuk",
+  "license": "AGPL-3.0",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mssql": "^12.3.0",
+    "@types/node": "^26.6.3",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.4",
+    "jsonwebtoken": "^9.0.3",
+    "mssql": "^12.7.2",
+    "redis": "^6.2.1"
+  }
+}
