@@ -20,6 +20,7 @@
   "license": "AGPL-3.0",
   "type": "module",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mssql": "^12.3.0",
