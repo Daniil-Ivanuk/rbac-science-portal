@@ -12,8 +12,7 @@ export class RoleRepository {
     const result = await pool
       .request()
       .input('Name', role.name)
-      .input('Description', role.description)
-      .query(`
+      .input('Description', role.description).query(`
         INSERT INTO Roles (Name, Description) 
         OUTPUT INSERTED.Id 
         VALUES (@Name, @Description)
@@ -32,7 +31,7 @@ export class RoleRepository {
     if (result.recordset.length === 0) {
       return null;
     }
-    
+
     const row = result.recordset[0];
     return {
       id: row.Id,
@@ -41,7 +40,10 @@ export class RoleRepository {
     };
   }
 
-  public async assignRoleToUser(userId: string, roleName: string): Promise<void> {
+  public async assignRoleToUser(
+    userId: string,
+    roleName: string,
+  ): Promise<void> {
     const pool = await poolPromise;
     await pool
       .request()
