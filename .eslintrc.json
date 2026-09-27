@@ -1,0 +1,18 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "google",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "env": {
+    "node": true,
+    "jest": true
+  },
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": "error",
+    "require-jsdoc": "off",
+    "new-cap": "off"
+  }
+}
