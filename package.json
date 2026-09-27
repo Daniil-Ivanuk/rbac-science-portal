@@ -45,11 +45,11 @@
     "redis": "^6.2.1"
   },
   "lint-staged": {
-  "src/**/*.ts": [
-    "prettier --write"
-  ],
-  "tests/**/*.ts": [
-    "prettier --write"
-  ]
-}
+    "src/**/*.ts": [
+      "prettier --write"
+    ],
+    "tests/**/*.ts": [
+      "prettier --write"
+    ]
+  }
 }
