@@ -8,7 +8,8 @@
     "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsc"
+    "build": "tsc",
+    "prepare": "husky"
   },
   "keywords": [
     "rbac",
@@ -29,7 +30,9 @@
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
+    "husky": "^9.1.7",
     "jest": "^30.5.2",
+    "lint-staged": "^17.6.0",
     "prettier": "^3.9.9",
     "ts-jest": "^29.4.14",
     "typescript": "^6.0.3",
@@ -40,5 +43,13 @@
     "jsonwebtoken": "^9.0.3",
     "mssql": "^12.7.2",
     "redis": "^6.2.1"
-  }
+  },
+  "lint-staged": {
+  "src/**/*.ts": [
+    "prettier --write"
+  ],
+  "tests/**/*.ts": [
+    "prettier --write"
+  ]
+}
 }
