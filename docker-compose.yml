@@ -1,0 +1,52 @@
+version: '3.8'
+
+networks:
+  db-network:
+    driver: bridge
+  cache-network:
+    driver: bridge
+
+services:
+  api:
+    build: .
+    container_name: rbac-api
+    ports:
+      - "3000:3000"
+    networks:
+      - db-network
+      - cache-network
+    depends_on:
+      - mssql-db
+      - redis-db
+    restart: unless-stopped
+
+  redis-db:
+    image: redis:7-alpine
+    container_name: rbac-redis-db
+    ports:
+      - "6379:6379"
+    networks:
+      - cache-network 
+    volumes:
+      - redis-data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    restart: unless-stopped
+
+  mssql-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: rbac-mssql-db
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+      MSSQL_PID: "Developer"
+    networks:
+      - db-network
+    volumes:
+      - mssql-data:/var/opt/mssql
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  mssql-data:
