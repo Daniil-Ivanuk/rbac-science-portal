@@ -1,15 +1,16 @@
-import Fastify from 'fastify';
-import {JwtService} from './core/jwt.service.js';
+import Fastify, {type FastifyRequest} from 'fastify';
+import {JwtService, type JwtPayload} from './core/jwt.service.js';
 import {verifyTokenHook} from './http/auth.hook.js';
 import {RbacGuard} from './core/rbac.guard.js';
 import {TokenBlacklistService} from './cache/token.blacklist.service.js';
 import {RoleCacheService} from './cache/role.cache.service.js';
 
 const server = Fastify({
-  logger: true, // Включаем встроенное логирование Fastify
+  logger: true,
 });
 
-server.post('/api/login', async (_request, _reply) => {
+// Убрали неиспользуемые параметры request и reply
+server.post('/api/login', async () => {
   const payload = {
     userId: '123',
     username: 'ivan_researcher',
@@ -22,14 +23,13 @@ server.post('/api/login', async (_request, _reply) => {
   return {accessToken: token};
 });
 
-// Защищенный эндпоинт
 server.get(
   '/api/articles',
   {preHandler: [verifyTokenHook]},
   async (request, reply) => {
-    const user = (request as any).user;
+    // Избавляемся от any, расширяя стандартный FastifyRequest нашим типом
+    const user = (request as FastifyRequest & {user: JwtPayload}).user;
 
-    // Вызываем статический метод напрямую
     if (!(await RbacGuard.hasPermission(user, 'read:articles'))) {
       return reply
         .status(403)
@@ -46,31 +46,29 @@ server.get(
 server.post(
   '/api/logout',
   {preHandler: [verifyTokenHook]},
-  async (request, _reply) => {
+  // Убрали неиспользуемый reply
+  async (request) => {
     const authHeader = request.headers.authorization;
     const token = authHeader!.split(' ')[1]!;
 
-    // Достаем payload пользователя, который сохранил verifyTokenHook
-    const user = (request as any).user;
+    // Добавляем поле exp к типу, так как оно нужно для вычисления времени жизни
+    const user = (
+      request as FastifyRequest & {user: JwtPayload & {exp: number}}
+    ).user;
 
-    // Вычисляем, сколько секунд осталось до конца жизни токена
     const currentSeconds = Math.floor(Date.now() / 1000);
     const expiresInSeconds = user.exp - currentSeconds;
 
-    // Передаем правильное имя метода и оба аргумента
     await TokenBlacklistService.blacklistToken(token, expiresInSeconds);
 
     return {message: 'Сеанс успешно завершен. Токен заблокирован.'};
   },
 );
 
-// Запуск сервера
 const start = async () => {
   try {
-    // 1. Выгружаем матрицу ролей из SQL Server в кэш Redis при старте
     await RoleCacheService.syncRolesToCache();
 
-    // 2. Подключаемся к порту 3000
     await server.listen({port: 3000, host: '0.0.0.0'});
     console.log('Научный портал запущен на http://localhost:3000');
   } catch (err) {
