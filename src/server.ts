@@ -30,7 +30,7 @@ server.get(
     const user = (request as any).user;
 
     // Вызываем статический метод напрямую
-    if (!RbacGuard.hasPermission(user, 'read:articles')) {
+    if (!(await RbacGuard.hasPermission(user, 'read:articles'))) {
       return reply
         .status(403)
         .send({error: 'Недостаточно прав для чтения статей'});
