@@ -4,15 +4,11 @@ import {TokenBlacklistService} from '../src/cache/token.blacklist.service.js';
 import {redisClient} from '../src/cache/redis.client.js';
 
 // Инструкция для Jest: автоматически подменять 'ioredis' на 'ioredis-mock'
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-require-imports */
 jest.mock('ioredis', () => {
-  const RedisMock = require('ioredis-mock');
-  return {
-    __esModule: true,
-    default: RedisMock,
-    Redis: RedisMock,
-  };
+  return require('ioredis-mock');
 });
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 describe('Redis Cache and Blacklist Service Tests', () => {
   // Очищаем базу мока перед каждым тестом, чтобы они были независимыми
