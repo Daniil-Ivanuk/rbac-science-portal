@@ -6,6 +6,7 @@ describe('RBAC and JWT Core Tests', () => {
   const mockUser: JwtPayload = {
     userId: '123e4567-e89b-12d3-a456-426614174000',
     username: 'researcher_ivan',
+    name: 'Иван Исследователь',
     roles: ['Researcher'],
     permissions: ['read:articles', 'write:articles'],
   };
@@ -17,6 +18,7 @@ describe('RBAC and JWT Core Tests', () => {
 
     const decoded = JwtService.verifyToken(token);
     expect(decoded.username).toBe(mockUser.username);
+    expect(decoded.name).toBe(mockUser.name);
     expect(decoded.roles).toEqual(mockUser.roles);
     expect(decoded.permissions).toEqual(mockUser.permissions);
   });
@@ -27,14 +29,18 @@ describe('RBAC and JWT Core Tests', () => {
     }).toThrow('Invalid or expired JWT token');
   });
 
-  it('должен корректно проверять права доступа (RbacGuard)', () => {
-    // Пользователь имеет право 'read:articles'
-    expect(RbacGuard.hasPermission(mockUser, 'read:articles')).toBe(true);
+  it('должен корректно проверять права доступа (RbacGuard)', async () => {
+    // Пользователь имеет право 'read:articles' (асинхронная проверка через Redis-кэш)
+    await expect(
+      RbacGuard.hasPermission(mockUser, 'read:articles'),
+    ).resolves.toBe(true);
 
     // У пользователя нет права 'delete:users'
-    expect(RbacGuard.hasPermission(mockUser, 'delete:users')).toBe(false);
+    await expect(
+      RbacGuard.hasPermission(mockUser, 'delete:users'),
+    ).resolves.toBe(false);
 
-    // Проверка ролей
+    // Проверка ролей (остается синхронной)
     expect(RbacGuard.hasRole(mockUser, ['Admin', 'Researcher'])).toBe(true);
     expect(RbacGuard.hasRole(mockUser, ['Admin'])).toBe(false);
   });
