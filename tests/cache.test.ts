@@ -3,16 +3,18 @@ import {jest, describe, beforeEach, afterAll, it, expect} from '@jest/globals';
 // 1. Подменяем ioredis на мок до импорта любых сервисов
 jest.unstable_mockModule('ioredis', async () => {
   const mock = await import('ioredis-mock');
-  return {default: mock.default || mock};
+  const mockRedis = mock.default || mock;
+
+  return {
+    default: mockRedis,
+    Redis: mockRedis, // Добавили именованный экспорт, который требует ваш код
+  };
 });
 
 // 2. Динамически загружаем сервисы (пути должны указывать на ваши реальные файлы)
 const {TokenBlacklistService} =
   await import('../src/cache/token.blacklist.service');
 const {redisClient} = await import('../src/cache/redis.client');
-
-// Если у вас есть отдельный класс для кэширования ролей, раскомментируйте и исправьте путь:
-// const { RoleCacheService } = await import('../src/cache/role.cache.service');
 
 describe('Redis Cache and Blacklist Service Tests', () => {
   beforeEach(async () => {
@@ -27,7 +29,6 @@ describe('Redis Cache and Blacklist Service Tests', () => {
 
   it('должен добавлять токен в черный список и корректно определять его статус', async () => {
     const token = 'test-token-123';
-    // Если у вас метод принимает только один аргумент, уберите 3600
     await TokenBlacklistService.blacklistToken(token, 3600);
     const isBlacklisted = await TokenBlacklistService.isBlacklisted(token);
 
@@ -44,7 +45,6 @@ describe('Redis Cache and Blacklist Service Tests', () => {
     const role = 'admin';
     const permissions = JSON.stringify(['read', 'write', 'delete']);
 
-    // Замените на RoleCacheService.setRolePermissions(role, ...), если используете сервис
     await redisClient.set(`role:${role}`, permissions);
     const cached = await redisClient.get(`role:${role}`);
 
@@ -56,7 +56,6 @@ describe('Redis Cache and Blacklist Service Tests', () => {
     const role = 'manager';
     await redisClient.set(`role:${role}`, JSON.stringify(['read', 'update']));
 
-    // Замените на RoleCacheService.invalidateRole(role), если используете сервис
     await redisClient.del(`role:${role}`);
     const cached = await redisClient.get(`role:${role}`);
 
