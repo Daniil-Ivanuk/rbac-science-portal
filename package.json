@@ -9,7 +9,8 @@
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "prisma skills sync || exit 0"
   },
   "keywords": [
     "rbac",
@@ -36,11 +37,13 @@
     "jest": "^30.5.2",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.9",
+    "prisma": "^6.19.3",
     "ts-jest": "^29.4.14",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "dotenv": "^18.0.4",
     "fastify": "^5.12.5",
     "ioredis": "^5.11.1",
