@@ -1,5 +1,5 @@
 import type {FastifyRequest, FastifyReply} from 'fastify';
-import {JwtService} from '../core/jwt.service.js';
+import {JwtService, type JwtPayload} from '../core/jwt.service.js';
 import {TokenBlacklistService} from '../cache/token.blacklist.service.js';
 
 export const verifyTokenHook = async (
@@ -32,10 +32,10 @@ export const verifyTokenHook = async (
     // 2. Валидируем криптографическую подпись и срок действия
     const payload = JwtService.verifyToken(token);
 
-    // 3. Сохраняем расшифрованные данные пользователя в объекте запроса для эндпоинтов
-    // Используем type assertion, так как расширяем стандартный объект FastifyRequest
-    (request as any).user = payload;
-  } catch (error: unknown) {
+    // 3. Сохраняем расшифрованные данные пользователя, избегая any
+    (request as FastifyRequest & {user: JwtPayload}).user = payload;
+  } catch {
+    // Используем optional catch binding (без неиспользуемой переменной ошибки)
     return reply
       .status(401)
       .send({error: 'Недействительный или просроченный токен'});

@@ -8,6 +8,7 @@ const TOKEN_EXPIRES_IN = '15m'; // Короткоживущий access token
 export interface JwtPayload {
   userId: string;
   username: string;
+  name: string;
   roles: string[];
   permissions: string[];
 }
