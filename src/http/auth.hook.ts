@@ -35,7 +35,7 @@ export const verifyTokenHook = async (
     // 3. Сохраняем расшифрованные данные пользователя в объекте запроса для эндпоинтов
     // Используем type assertion, так как расширяем стандартный объект FastifyRequest
     (request as any).user = payload;
-  } catch (_error) {
+  } catch (error: unknown) {
     return reply
       .status(401)
       .send({error: 'Недействительный или просроченный токен'});
