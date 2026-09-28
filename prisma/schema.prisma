@@ -1,17 +1,61 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "sqlserver"
   url      = env("DATABASE_URL")
 }
 
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       String     @id @default(uuid()) @db.UniqueIdentifier
+  username String     @unique @db.NVarChar(255)
+  isActive Boolean    @default(true)
+  roles    UserRole[]
+
+  @@map("Users")
+}
+
 model Role {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  permissions String   // Массив прав в формате JSON, например: '["read", "write"]'
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          Int              @id @default(autoincrement())
+  name        String           @unique @db.NVarChar(100)
+  description String?          @db.NVarChar(500)
+  createdAt   DateTime         @default(now())
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("Roles")
+}
+
+model Permission {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique @db.NVarChar(100)
+  resource    String           @db.NVarChar(100)
+  roles       RolePermission[]
+
+  @@map("Permissions")
+}
+
+model UserRole {
+  id     Int    @id @default(autoincrement())
+  userId String @db.UniqueIdentifier
+  roleId Int
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("UserRoles")
+}
+
+model RolePermission {
+  id           Int    @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("RolePermissions")
 }
