@@ -1,6 +1,7 @@
-import {describe, it, expect} from '@jest/globals';
+import {describe, it, expect, beforeEach} from '@jest/globals';
 import {JwtService, type JwtPayload} from '../src/core/jwt.service.js';
 import {RbacGuard} from '../src/core/rbac.guard.js';
+import {redisClient} from '../src/cache/redis.client.js';
 
 describe('RBAC and JWT Core Tests', () => {
   const mockUser: JwtPayload = {
@@ -10,6 +11,14 @@ describe('RBAC and JWT Core Tests', () => {
     roles: ['Researcher'],
     permissions: ['read:articles', 'write:articles'],
   };
+
+  // Перед каждым тестом заполняем мок-Redis нужными правами для роли Researcher
+  beforeEach(async () => {
+    await redisClient.set(
+      'role:Researcher',
+      JSON.stringify(['read:articles', 'write:articles']),
+    );
+  });
 
   it('должен успешно генерировать и верифицировать JWT токен', () => {
     const token = JwtService.generateToken(mockUser);
@@ -30,7 +39,7 @@ describe('RBAC and JWT Core Tests', () => {
   });
 
   it('должен корректно проверять права доступа (RbacGuard)', async () => {
-    // Пользователь имеет право 'read:articles' (асинхронная проверка через Redis-кэш)
+    // Пользователь имеет право 'read:articles' (проверка через Redis-кэш)
     await expect(
       RbacGuard.hasPermission(mockUser, 'read:articles'),
     ).resolves.toBe(true);
