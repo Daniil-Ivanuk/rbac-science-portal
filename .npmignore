@@ -1,0 +1,23 @@
+# Исходный код и тесты (пользователям пакета нужны только скомпилированные файлы из dist)
+src/
+tests/
+__tests__/
+
+# Конфигурационные файлы разработки и окружения
+.env
+.env.*
+tsconfig.json
+jest.config.js
+eslint.config.js
+.eslintrc*
+.prettierrc*
+.lintstagedrc*
+
+# Системные файлы и системы контроля версий
+.git/
+.github/
+docker-compose.yml
+Dockerfile
+README.md
+LICENSE
+node_modules/
