@@ -25,7 +25,7 @@ server.post('/api/login', async () => {
 
 server.get(
   '/api/articles',
-  {preHandler: [verifyTokenHook]},
+  {preHandler: [verifyTokenHook()]},
   async (request, reply) => {
     // Избавляемся от any, расширяя стандартный FastifyRequest нашим типом
     const user = (request as FastifyRequest & {user: JwtPayload}).user;
@@ -45,7 +45,7 @@ server.get(
 
 server.post(
   '/api/logout',
-  {preHandler: [verifyTokenHook]},
+  {preHandler: [verifyTokenHook()]},
   // Убрали неиспользуемый reply
   async (request) => {
     const authHeader = request.headers.authorization;

@@ -1,5 +1,5 @@
 // 1. Явно импортируем глобальные функции Jest (исправляет ошибки 'describe', 'it', 'afterAll')
-import {describe, it, beforeAll, afterAll, expect} from '@jest/globals';
+import {describe, it, beforeAll, afterAll, expect, jest} from '@jest/globals';
 import Fastify, {type FastifyInstance} from 'fastify';
 import {prisma} from '../src/db/prisma.client.js';
 import {redisClient} from '../src/cache/redis.client.js';
@@ -10,6 +10,8 @@ import {
   TokenBlacklistService,
   verifyTokenHook,
 } from '../src/index.js';
+
+jest.setTimeout(30000);
 
 describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
   let app: FastifyInstance;
@@ -41,7 +43,7 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
       '/protected',
       {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        preHandler: [verifyTokenHook as any],
+        preHandler: [verifyTokenHook([testRoleName]) as any],
       },
       async () => {
         // Убрали неиспользуемые параметры request и reply
@@ -54,7 +56,7 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
     validToken = JwtService.generateToken({
       userId: testUserId,
       username: testUsername,
-      name: testUsername, // 3. Добавлено обязательное поле 'name' (исправляет ошибку JwtPayload)
+      name: testUsername,
       roles: [testRoleName],
       permissions: [],
     });

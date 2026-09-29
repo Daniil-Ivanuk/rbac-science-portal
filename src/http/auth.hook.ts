@@ -1,43 +1,50 @@
 import type {FastifyRequest, FastifyReply} from 'fastify';
 import {JwtService, type JwtPayload} from '../core/jwt.service.js';
 import {TokenBlacklistService} from '../cache/token.blacklist.service.js';
+// 1. Импортируем кастомные ошибки
+import {InvalidTokenError, AccessDeniedError} from '../core/errors.js';
 
-export const verifyTokenHook = async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
-  const authHeader = request.headers.authorization;
+// 2. Делаем функцию фабрикой, принимающей массив разрешенных ролей
+export const verifyTokenHook = (requiredRoles: string[] = []) => {
+  return async (request: FastifyRequest, _reply: FastifyReply) => {
+    const authHeader = request.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return reply
-      .status(401)
-      .send({error: 'Отсутствует или некорректен заголовок Authorization'});
-  }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      // 3. Выбрасываем исключения вместо ручной отправки ответа
+      throw new InvalidTokenError(
+        'Отсутствует или некорректен заголовок Authorization',
+      );
+    }
 
-  const token = authHeader.split(' ')[1];
+    const token = authHeader.split(' ')[1];
 
-  if (!token) {
-    return reply.status(401).send({error: 'Токен не найден'});
-  }
+    if (!token) {
+      throw new InvalidTokenError('Токен не найден');
+    }
 
-  // 1. Проверяем, не отозван ли токен (Redis)
-  const isBlacklisted = await TokenBlacklistService.isBlacklisted(token);
-  if (isBlacklisted) {
-    return reply
-      .status(401)
-      .send({error: 'Сессия завершена (токен в черном списке)'});
-  }
+    const isBlacklisted = await TokenBlacklistService.isBlacklisted(token);
+    if (isBlacklisted) {
+      throw new InvalidTokenError('Сессия завершена (токен в черном списке)');
+    }
 
-  try {
-    // 2. Валидируем криптографическую подпись и срок действия
-    const payload = JwtService.verifyToken(token);
+    let payload: JwtPayload;
+    try {
+      payload = JwtService.verifyToken(token);
+      (request as FastifyRequest & {user: JwtPayload}).user = payload;
+    } catch {
+      throw new InvalidTokenError('Недействительный или просроченный токен');
+    }
 
-    // 3. Сохраняем расшифрованные данные пользователя, избегая any
-    (request as FastifyRequest & {user: JwtPayload}).user = payload;
-  } catch {
-    // Используем optional catch binding (без неиспользуемой переменной ошибки)
-    return reply
-      .status(401)
-      .send({error: 'Недействительный или просроченный токен'});
-  }
+    // 4. Проверяем наличие нужной роли (основа RBAC)
+    if (requiredRoles.length > 0) {
+      const hasRole = requiredRoles.some((role) =>
+        payload.roles.includes(role),
+      );
+      if (!hasRole) {
+        throw new AccessDeniedError(
+          `Доступ запрещен. Требуются роли: ${requiredRoles.join(', ')}`,
+        );
+      }
+    }
+  };
 };
