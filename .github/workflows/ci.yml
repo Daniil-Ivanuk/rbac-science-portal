@@ -9,6 +9,12 @@ on:
 jobs:
   validate-and-build:
     runs-on: ubuntu-latest
+    
+    # 1. Задаем переменные окружения для CI-сервера
+    env:
+      DATABASE_URL: "sqlserver://localhost:1433;database=master;user=sa;password=YourStrong!Passw0rd;encrypt=true;trustServerCertificate=true"
+      REDIS_URL: "redis://localhost:6379"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,8 +25,21 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
+      # 2. Поднимаем контейнеры SQL Server и Redis
+      - name: Start infrastructure (Docker Compose)
+        run: docker compose up -d
+
+      # 3. Устанавливаем зависимости
       - name: Install dependencies
         run: npm ci 
+
+      # 4. SQL Server нужно время для запуска (около 15 секунд)
+      - name: Wait for SQL Server to boot
+        run: sleep 15
+
+      # 5. Накатываем структуру БД перед тестами
+      - name: Push Prisma schema to test DB
+        run: npx prisma db push
 
       - name: 1. Run Linter
         run: npm run lint
