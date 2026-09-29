@@ -1,4 +1,4 @@
-import type {FastifyRequest, FastifyReply} from 'fastify';
+import type {FastifyRequest} from 'fastify';
 import {JwtService, type JwtPayload} from '../core/jwt.service.js';
 import {TokenBlacklistService} from '../cache/token.blacklist.service.js';
 // 1. Импортируем кастомные ошибки
@@ -6,7 +6,7 @@ import {InvalidTokenError, AccessDeniedError} from '../core/errors.js';
 
 // 2. Делаем функцию фабрикой, принимающей массив разрешенных ролей
 export const verifyTokenHook = (requiredRoles: string[] = []) => {
-  return async (request: FastifyRequest, _reply: FastifyReply) => {
+  return async (request: FastifyRequest) => {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
