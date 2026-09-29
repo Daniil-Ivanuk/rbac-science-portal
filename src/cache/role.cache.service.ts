@@ -1,50 +1,47 @@
-import {PrismaClient} from '@prisma/client';
+import {prisma} from '../db/prisma.client.js';
 import {redisClient} from './redis.client.js';
-
-const prisma = new PrismaClient();
 
 export class RoleCacheService {
   /**
-   * Выгружает все активные роли из SQL Server и сохраняет их в Redis
+   * Синхронизирует все роли и их права из базы данных SQL Server в кэш Redis
    */
-  static async syncRolesToCache(): Promise<void> {
-    try {
-      // 1. Получаем роли из базы через Prisma
-      const roles = await prisma.role.findMany({
-        where: {isActive: true},
-        select: {name: true, permissions: true},
-      });
+  static async syncRolesToCache() {
+    // 1. Достаем все роли и связанные с ними права через промежуточную таблицу
+    const roles = await prisma.role.findMany({
+      include: {
+        permissions: {
+          include: {
+            permission: true, // Включаем саму сущность Permission
+          },
+        },
+      },
+    });
 
-      if (roles.length === 0) {
-        console.warn('В базе данных не найдено активных ролей.');
-        return;
-      }
+    // 2. Формируем кэш и записываем в Redis
+    for (const role of roles) {
+      // Вытаскиваем названия прав из промежуточной таблицы RolePermission
+      const permissionNames = role.permissions.map((rp) => rp.permission.name);
 
-      // 2. Используем pipeline (транзакцию) Redis для массовой записи
-      const pipeline = redisClient.pipeline();
-
-      for (const role of roles) {
-        // Ключ будет выглядеть как "role:admin"
-        pipeline.set(`role:${role.name}`, role.permissions);
-      }
-
-      // 3. Выполняем запись
-      await pipeline.exec();
-      console.log(`Успешно загружено ${roles.length} ролей в кэш Redis.`);
-    } catch (error) {
-      console.error('Ошибка при синхронизации ролей с Redis:', error);
-      throw error;
+      // Кэшируем массив строк (названий прав) по ключу роли
+      await redisClient.set(
+        `role:${role.name}`,
+        JSON.stringify(permissionNames),
+      );
     }
   }
 
   /**
-   * Получает права для конкретной роли из кэша
+   * Получает права для указанной роли из кэша Redis
    */
-  static async getRolePermissions(roleName: string): Promise<string[] | null> {
-    const permissionsJson = await redisClient.get(`role:${roleName}`);
-    if (!permissionsJson) {
-      return null;
+  static async getRolePermissions(roleName: string): Promise<string[]> {
+    const cached = await redisClient.get(`role:${roleName}`);
+    if (!cached) {
+      return [];
     }
-    return JSON.parse(permissionsJson);
+    try {
+      return JSON.parse(cached);
+    } catch {
+      return [];
+    }
   }
 }
