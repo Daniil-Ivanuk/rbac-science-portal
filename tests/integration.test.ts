@@ -40,10 +40,11 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
     app.get(
       '/protected',
       {
-        // 2. Обходим конфликт сложных типов Fastify с помощью приведения к any (исправляет ошибку preHandler)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         preHandler: [verifyTokenHook as any],
       },
-      async (request, reply) => {
+      async () => {
+        // Убрали неиспользуемые параметры request и reply
         return {success: true, message: 'Доступ разрешен'};
       },
     );
