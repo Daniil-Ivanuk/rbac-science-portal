@@ -58,5 +58,8 @@
     "tests/**/*.ts": [
       "prettier --write"
     ]
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   }
 }
