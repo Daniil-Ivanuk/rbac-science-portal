@@ -1,10 +1,21 @@
 import sql from 'mssql';
 
+const DB_USER = process.env.DB_USER;
+const DB_PASSWORD = process.env.DB_PASSWORD;
+const DB_NAME = process.env.DB_NAME;
+const DB_SERVER = process.env.DB_SERVER;
+
+if (!DB_USER || !DB_PASSWORD || !DB_NAME || !DB_SERVER) {
+  throw new Error(
+    'Критическая ошибка: Не заданы параметры подключения к БД в переменных окружения (DB_USER, DB_PASSWORD, DB_NAME, DB_SERVER).',
+  );
+}
+
 const dbConfig: sql.config = {
-  user: process.env.DB_USER || 'sa',
-  password: process.env.DB_PASSWORD || 'YourStrongPass!',
-  database: process.env.DB_NAME || 'SciencePortal',
-  server: process.env.DB_SERVER || 'localhost',
+  user: DB_USER,
+  password: DB_PASSWORD,
+  database: DB_NAME,
+  server: DB_SERVER,
   options: {
     encrypt: true,
     trustServerCertificate: true,
