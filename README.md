@@ -70,12 +70,17 @@ npm run prisma:seed
 ```typescript
 import Fastify from 'fastify';
 import { initRbacModule } from '@kep4yk/rbac-jwt-core';
+import { prisma } from './db'; 
+import { redis } from './cache';
 
 const app = Fastify();
 
 app.register(async function (app) {
-  // Синхронизация БД ролей с кэшем Redis
-  await initRbacModule();
+  await initRbacModule({
+    jwtSecret: process.env.JWT_SECRET,
+    redisClient: redis,
+    dbClient: prisma
+  });
 });
 ```
 
@@ -84,14 +89,12 @@ app.register(async function (app) {
 ```typescript
 import { verifyTokenHook } from '@kep4yk/rbac-jwt-core';
 
-// Эндпоинт доступен только администраторам
 app.get('/admin/panel', {
   preHandler: verifyTokenHook(['Admin'])
 }, async (request, reply) => {
   return { message: 'Добро пожаловать в панель управления' };
 });
 
-// Эндпоинт доступен администраторам и научным сотрудникам
 app.get('/research/data', {
   preHandler: verifyTokenHook(['Admin', 'Researcher'])
 }, async (request, reply) => {
