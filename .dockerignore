@@ -1,0 +1,26 @@
+# Зависимости и локальные сборки
+node_modules
+dist
+.npm
+
+# Конфигурация окружения
+.env
+.env.*
+
+# Тесты и документация 
+tests/
+__tests__/
+README.md
+LICENSE
+
+# Системные файлы контроля версий и CI
+.git
+.github
+.husky
+.gitignore
+.npmignore
+
+# Прочие файлы разработки
+Dockerfile
+docker-compose.yml
+*.log
