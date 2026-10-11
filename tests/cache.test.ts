@@ -1,6 +1,5 @@
 import {jest, describe, beforeEach, afterAll, it, expect} from '@jest/globals';
 
-// 1. Подменяем ioredis на мок до импорта любых сервисов
 jest.unstable_mockModule('ioredis', async () => {
   const mock = await import('ioredis-mock');
   const mockRedis = mock.default || mock;
