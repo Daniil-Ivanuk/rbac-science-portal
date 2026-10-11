@@ -30,7 +30,7 @@ export class JwtService {
       const decoded = jwt.verify(token, SECRET_KEY);
       return decoded as JwtPayload;
     } catch {
-      throw new InvalidTokenError('Недействительный или просроченный токен');
+      throw new InvalidTokenError('Invalid or expired JWT token');
     }
   }
 }
