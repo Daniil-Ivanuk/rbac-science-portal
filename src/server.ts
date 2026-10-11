@@ -9,7 +9,6 @@ const server = Fastify({
   logger: true,
 });
 
-// Убрали неиспользуемые параметры request и reply
 server.post('/api/login', async () => {
   const payload = {
     userId: '123',
@@ -27,7 +26,6 @@ server.get(
   '/api/articles',
   {preHandler: [verifyTokenHook()]},
   async (request, reply) => {
-    // Избавляемся от any, расширяя стандартный FastifyRequest нашим типом
     const user = (request as FastifyRequest & {user: JwtPayload}).user;
 
     if (!(await RbacGuard.hasPermission(user, 'read:articles'))) {
@@ -46,12 +44,9 @@ server.get(
 server.post(
   '/api/logout',
   {preHandler: [verifyTokenHook()]},
-  // Убрали неиспользуемый reply
   async (request) => {
     const authHeader = request.headers.authorization;
     const token = authHeader!.split(' ')[1]!;
-
-    // Добавляем поле exp к типу, так как оно нужно для вычисления времени жизни
     const user = (
       request as FastifyRequest & {user: JwtPayload & {exp: number}}
     ).user;

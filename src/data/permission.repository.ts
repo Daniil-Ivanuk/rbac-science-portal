@@ -7,7 +7,6 @@ export interface Permission {
 }
 
 export class PermissionRepository {
-  // CREATE: Создание нового правила
   public async create(permission: Permission): Promise<number> {
     const pool = await poolPromise;
     const result = await pool
@@ -21,7 +20,6 @@ export class PermissionRepository {
     return result.recordset[0].Id;
   }
 
-  // READ: Получение прав, назначенных конкретной роли
   public async getPermissionsByRoleId(roleId: number): Promise<Permission[]> {
     const pool = await poolPromise;
     const result = await pool.request().input('RoleId', roleId).query(`
@@ -38,7 +36,6 @@ export class PermissionRepository {
     }));
   }
 
-  // ASSIGN: Привязка права к роли (запись в сводную таблицу)
   public async assignToRole(
     roleId: number,
     permissionId: number,
@@ -59,7 +56,6 @@ export class PermissionRepository {
       `);
   }
 
-  // REVOKE: Отвязка права от роли
   public async revokeFromRole(
     roleId: number,
     permissionId: number,

@@ -46,7 +46,6 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
         preHandler: [verifyTokenHook([testRoleName]) as any],
       },
       async () => {
-        // Убрали неиспользуемые параметры request и reply
         return {success: true, message: 'Доступ разрешен'};
       },
     );

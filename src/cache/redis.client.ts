@@ -7,7 +7,6 @@ const isTest =
 const redisHost = process.env.REDIS_HOST || 'localhost';
 const redisPort = Number(process.env.REDIS_PORT) || 6379;
 
-// Используем тип Redis, так как ioredis-mock полностью совместим с его интерфейсом
 export const redisClient: Redis = (isTest
   ? new RedisMock()
   : new Redis({

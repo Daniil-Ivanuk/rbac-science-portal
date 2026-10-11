@@ -1,4 +1,4 @@
-CREATE LOGIN RbacAppLogin WITH PASSWORD = 'StrongPassword123!';
+CREATE LOGIN RbacAppLogin WITH PASSWORD = '$(RbacAppPassword)';
 CREATE USER RbacAppUser FOR LOGIN RbacAppLogin;
 
 CREATE ROLE rbac_app_role;

@@ -12,7 +12,6 @@ describe('RBAC and JWT Core Tests', () => {
     permissions: ['read:articles', 'write:articles'],
   };
 
-  // Перед каждым тестом заполняем мок-Redis нужными правами для роли Researcher
   beforeEach(async () => {
     await redisClient.set(
       'role:Researcher',
@@ -39,17 +38,14 @@ describe('RBAC and JWT Core Tests', () => {
   });
 
   it('должен корректно проверять права доступа (RbacGuard)', async () => {
-    // Пользователь имеет право 'read:articles' (проверка через Redis-кэш)
     await expect(
       RbacGuard.hasPermission(mockUser, 'read:articles'),
     ).resolves.toBe(true);
 
-    // У пользователя нет права 'delete:users'
     await expect(
       RbacGuard.hasPermission(mockUser, 'delete:users'),
     ).resolves.toBe(false);
 
-    // Проверка ролей (остается синхронной)
     expect(RbacGuard.hasRole(mockUser, ['Admin', 'Researcher'])).toBe(true);
     expect(RbacGuard.hasRole(mockUser, ['Admin'])).toBe(false);
   });

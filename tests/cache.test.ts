@@ -7,23 +7,20 @@ jest.unstable_mockModule('ioredis', async () => {
 
   return {
     default: mockRedis,
-    Redis: mockRedis, // Добавили именованный экспорт, который требует ваш код
+    Redis: mockRedis,
   };
 });
 
-// 2. Динамически загружаем сервисы (пути должны указывать на ваши реальные файлы)
 const {TokenBlacklistService} =
   await import('../src/cache/token.blacklist.service');
 const {redisClient} = await import('../src/cache/redis.client');
 
 describe('Redis Cache and Blacklist Service Tests', () => {
   beforeEach(async () => {
-    // Очищаем кэш перед каждым тестом
     await redisClient.flushall();
   });
 
   afterAll(async () => {
-    // Закрываем соединение после всех проверок
     await redisClient.quit();
   });
 

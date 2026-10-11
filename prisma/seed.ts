@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Начинаем заполнение базы данных (seeding)...');
 
-  // 1. Создаем базовые права (используем upsert, чтобы не создавать дубликаты при повторном запуске)
   const readArticles = await prisma.permission.upsert({
     where: { name: 'read:articles' },
     update: {},
@@ -18,7 +17,6 @@ async function main() {
     create: { name: 'write:articles', resource: 'articles' },
   });
 
-  // 2. Создаем роли
   const adminRole = await prisma.role.upsert({
     where: { name: 'Admin' },
     update: {},
@@ -31,8 +29,6 @@ async function main() {
     create: { name: 'Researcher', description: 'Научный сотрудник' },
   });
 
-  // 3. Связываем роли и права
-  // Администратор получает все права
   for (const perm of [readArticles, writeArticles]) {
     await prisma.rolePermission.upsert({
       where: {
@@ -43,7 +39,6 @@ async function main() {
     });
   }
 
-  // Научный сотрудник получает только право на чтение
   await prisma.rolePermission.upsert({
     where: {
       roleId_permissionId: { roleId: researcherRole.id, permissionId: readArticles.id },

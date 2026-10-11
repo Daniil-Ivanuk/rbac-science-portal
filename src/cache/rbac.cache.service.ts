@@ -1,14 +1,12 @@
 import {redisClient} from './redis.client.js';
 
-const ROLE_PERMISSIONS_TTL = 600; // 10 минут в секундах
+const ROLE_PERMISSIONS_TTL = 600;
 
 export class RbacCacheService {
-  // Ключ для хранения прав роли в Redis
   private static getRoleKey(roleName: string): string {
     return `rbac:role:${roleName}:permissions`;
   }
 
-  // Получить кэшированные права роли
   public static async getPermissionsForRole(
     roleName: string,
   ): Promise<string[] | null> {
@@ -17,7 +15,6 @@ export class RbacCacheService {
     return JSON.parse(data) as string[];
   }
 
-  // Сохранить права роли в кэш
   public static async setPermissionsForRole(
     roleName: string,
     permissions: string[],
@@ -29,7 +26,6 @@ export class RbacCacheService {
     );
   }
 
-  // Инвалидация (сброс) кэша при изменении прав в базе
   public static async invalidateRole(roleName: string): Promise<void> {
     await redisClient.del(this.getRoleKey(roleName));
   }
