@@ -1,4 +1,3 @@
-// 1. Явно импортируем глобальные функции Jest (исправляет ошибки 'describe', 'it', 'afterAll')
 import {describe, it, beforeAll, afterAll, expect, jest} from '@jest/globals';
 import Fastify, {type FastifyInstance} from 'fastify';
 import {prisma} from '../src/db/prisma.client.js';
@@ -15,15 +14,20 @@ jest.setTimeout(30000);
 
 describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
   let app: FastifyInstance;
-  let testUserId: string;
-  let testRoleId: number;
+  let testUserId: string | undefined;
+  let testRoleId: number | undefined;
   let validToken: string;
 
   const testRoleName = `IntegrationRole_${Date.now()}`;
   const testUsername = `IntegrationUser_${Date.now()}`;
 
   beforeAll(async () => {
-    await initRbacModule();
+    // 1. Передаем конфигурацию в инициализатор модуля
+    await initRbacModule({
+      jwtSecret: process.env.JWT_SECRET || 'test-secret',
+      redisClient: redisClient,
+      dbClient: prisma,
+    });
 
     const role = await RoleService.createRole(testRoleName, 'Тестовая роль');
     testRoleId = role.id;
@@ -34,8 +38,6 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
     testUserId = user.id;
 
     await RoleService.assignRoleToUser(testUserId, testRoleId);
-
-    await initRbacModule();
 
     app = Fastify();
 
@@ -62,9 +64,14 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
   });
 
   afterAll(async () => {
-    await prisma.userRole.deleteMany({where: {userId: testUserId}});
-    await prisma.user.delete({where: {id: testUserId}});
-    await prisma.role.delete({where: {id: testRoleId}});
+    if (testUserId) {
+      await prisma.userRole.deleteMany({where: {userId: testUserId}});
+      await prisma.user.delete({where: {id: testUserId}});
+    }
+
+    if (testRoleId) {
+      await prisma.role.delete({where: {id: testRoleId}});
+    }
 
     await app.close();
     await prisma.$disconnect();

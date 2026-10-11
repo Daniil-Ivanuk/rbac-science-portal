@@ -1,7 +1,15 @@
-import {describe, it, expect, beforeEach} from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  beforeAll,
+  afterAll,
+} from '@jest/globals';
 import {JwtService, type JwtPayload} from '../src/core/jwt.service.js';
 import {RbacGuard} from '../src/core/rbac.guard.js';
 import {redisClient} from '../src/cache/redis.client.js';
+import {RbacContext} from '../src/index.js';
 
 describe('RBAC and JWT Core Tests', () => {
   const mockUser: JwtPayload = {
@@ -12,8 +20,25 @@ describe('RBAC and JWT Core Tests', () => {
     permissions: ['read:articles', 'write:articles'],
   };
 
+  beforeAll(() => {
+    RbacContext.isInitialized = true;
+    RbacContext.redis = redisClient as any;
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error(
+        '[Test Setup] Критическая ошибка: JWT_SECRET не задан в окружении!',
+      );
+    }
+
+    RbacContext.jwtSecret = process.env.JWT_SECRET;
+  });
+
+  afterAll(() => {
+    redisClient.quit();
+  });
+
   beforeEach(async () => {
-    await redisClient.set(
+    await RbacContext.redis.set(
       'role:Researcher',
       JSON.stringify(['read:articles', 'write:articles']),
     );
