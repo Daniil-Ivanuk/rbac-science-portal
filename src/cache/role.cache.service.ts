@@ -21,7 +21,7 @@ export class RoleCacheService {
 
       for (const role of roles) {
         const permissionNames = role.permissions.map(
-          (rp: any) => rp.permission.name,
+          (rp: {permission: {name: string}}) => rp.permission.name,
         );
 
         await RbacContext.redis.set(

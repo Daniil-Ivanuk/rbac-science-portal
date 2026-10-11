@@ -22,6 +22,7 @@ describe('RBAC and JWT Core Tests', () => {
 
   beforeAll(() => {
     RbacContext.isInitialized = true;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RbacContext.redis = redisClient as any;
 
     if (!process.env.JWT_SECRET) {
