@@ -4,9 +4,7 @@ import {InvalidTokenError} from './errors.js';
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-  throw new Error(
-    'Критическая ошибка: переменная окружения JWT_SECRET не задана.',
-  );
+  throw new Error('Critical error: JWT_SECRET environment variable is not set');
 }
 const SECRET_KEY: string = JWT_SECRET;
 
