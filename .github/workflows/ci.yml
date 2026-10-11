@@ -17,6 +17,7 @@ jobs:
 
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       RBAC_APP_PASSWORD: ${{ secrets.RBAC_APP_PASSWORD }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
     steps:
       - name: Checkout repository
