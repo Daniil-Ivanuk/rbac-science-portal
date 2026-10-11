@@ -1,9 +1,14 @@
 import jwt from 'jsonwebtoken';
+import {InvalidTokenError} from './errors.js';
 
-// Секретный ключ для подписи (в продакшене берется из переменных окружения)
-const JWT_SECRET =
-  process.env.JWT_SECRET || 'super_secret_science_portal_key_2026';
-const TOKEN_EXPIRES_IN = '15m'; // Короткоживущий access token
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error(
+    'Критическая ошибка: переменная окружения JWT_SECRET не задана.',
+  );
+}
+const SECRET_KEY: string = JWT_SECRET;
 
 export interface JwtPayload {
   userId: string;
@@ -11,20 +16,23 @@ export interface JwtPayload {
   name: string;
   roles: string[];
   permissions: string[];
+  [key: string]: unknown;
 }
 
 export class JwtService {
-  // Генерация JWT с включением ролей и прав в claims
-  public static generateToken(payload: JwtPayload): string {
-    return jwt.sign(payload, JWT_SECRET, {expiresIn: TOKEN_EXPIRES_IN});
+  public static generateToken(
+    payload: JwtPayload,
+    expiresIn: string = '1h',
+  ): string {
+    return jwt.sign(payload, SECRET_KEY, {expiresIn} as jwt.SignOptions);
   }
 
-  // Верификация и парсинг токена
   public static verifyToken(token: string): JwtPayload {
     try {
-      return jwt.verify(token, JWT_SECRET) as JwtPayload;
+      const decoded = jwt.verify(token, SECRET_KEY);
+      return decoded as JwtPayload;
     } catch {
-      throw new Error('Invalid or expired JWT token');
+      throw new InvalidTokenError('Недействительный или просроченный токен');
     }
   }
 }
