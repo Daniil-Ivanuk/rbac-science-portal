@@ -29,7 +29,7 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-    - name: Create .env file for Docker
+      - name: Create .env file for Docker
         run: |
           cat << EOF > .env
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
@@ -39,7 +39,7 @@ jobs:
           DB_NAME=master
           DB_SERVER=localhost
           EOF
-          
+
       - name: Start infrastructure (Docker Compose)
         run: docker compose up -d
         # env:
