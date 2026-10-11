@@ -29,8 +29,18 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
+    - name: Create .env file for Docker
+        run: |
+          cat << EOF > .env
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          RBAC_APP_PASSWORD=${{ secrets.RBAC_APP_PASSWORD }}
+          DB_USER=sa
+          DB_NAME=master
+          DB_SERVER=localhost
+          EOF
+          
       - name: Start infrastructure (Docker Compose)
-        # Если ваш docker-compose.yml тоже требует пароль как переменную, раскомментируйте блок env ниже
         run: docker compose up -d
         # env:
         #   SA_PASSWORD: ${{ secrets.DB_PASSWORD }}
