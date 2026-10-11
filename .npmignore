@@ -18,6 +18,4 @@ eslint.config.js
 .github/
 docker-compose.yml
 Dockerfile
-README.md
-LICENSE
 node_modules/
