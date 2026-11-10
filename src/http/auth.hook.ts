@@ -9,20 +9,18 @@ async function extractAndVerifyToken(
   const authHeader = request.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new InvalidTokenError(
-      'Отсутствует или некорректен заголовок Authorization',
-    );
+    throw new InvalidTokenError('Missing or invalid Authorization header');
   }
 
   const token = authHeader.split(' ')[1];
 
   if (!token) {
-    throw new InvalidTokenError('Токен не найден');
+    throw new InvalidTokenError('Token not found');
   }
 
   const isBlacklisted = await TokenBlacklistService.isBlacklisted(token);
   if (isBlacklisted) {
-    throw new InvalidTokenError('Сессия завершена (токен в черном списке)');
+    throw new InvalidTokenError('Session terminated (token is blacklisted)');
   }
 
   try {
@@ -45,7 +43,7 @@ export const verifyTokenHook = (requiredRoles: string[] = []) => {
 
       if (!hasRole) {
         throw new AccessDeniedError(
-          `Доступ запрещен. Требуются роли: ${requiredRoles.join(', ')}`,
+          `Access denied. Required roles: ${requiredRoles.join(', ')}`,
         );
       }
     }

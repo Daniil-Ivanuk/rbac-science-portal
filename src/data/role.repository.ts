@@ -49,6 +49,6 @@ export class RoleRepository {
       .request()
       .input('UserId', userId)
       .input('RoleName', roleName)
-      .execute('sp_AssignRoleToUser'); // Вызов хранимой процедуры
+      .execute('sp_AssignRoleToUser');
   }
 }

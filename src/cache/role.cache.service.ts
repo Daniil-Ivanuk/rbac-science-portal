@@ -4,7 +4,7 @@ export class RoleCacheService {
   static async syncRolesToCache(): Promise<void> {
     if (!RbacContext.isInitialized) {
       throw new Error(
-        '[RBAC Module] Попытка синхронизации кэша до инициализации модуля.',
+        '[RBAC Module] Attempted to synchronize cache before module initialization.',
       );
     }
 
@@ -30,7 +30,7 @@ export class RoleCacheService {
         );
       }
     } catch (error) {
-      console.error('[RoleCacheService] Ошибка при чтении ролей из БД:', error);
+      console.error('[RoleCacheService] Error reading roles from DB:', error);
       throw error;
     }
   }
@@ -48,7 +48,7 @@ export class RoleCacheService {
       return JSON.parse(cached);
     } catch (error) {
       console.error(
-        `[RoleCacheService] Ошибка при парсинге кэша для роли ${roleName}:`,
+        `[RoleCacheService] Error parsing cache for role ${roleName}:`,
         error,
       );
       return [];
@@ -62,7 +62,7 @@ export class RoleCacheService {
       await RbacContext.redis.del(`role:${roleName}`);
     } catch (error) {
       console.error(
-        `[RoleCacheService] Ошибка инвалидации кэша для роли ${roleName}:`,
+        `[RoleCacheService] Error invalidating cache for role ${roleName}:`,
         error,
       );
     }
@@ -81,7 +81,7 @@ export class RoleCacheService {
       );
     } catch (error) {
       console.error(
-        `[RoleCacheService] Ошибка обновления кэша для роли ${roleName}:`,
+        `[RoleCacheService] Error updating cache for role ${roleName}:`,
         error,
       );
     }

@@ -14,7 +14,10 @@
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc",
     "prepare": "husky",
-    "postinstall": "prisma skills sync || exit 0"
+    "postinstall": "prisma skills sync || exit 0",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:rollback": "npx tsx prisma/rollback.ts",
+    "prisma:seed": "npx tsx prisma/seed.ts"
   },
   "keywords": [
     "rbac",

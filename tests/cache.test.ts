@@ -23,7 +23,7 @@ describe('Redis Cache and Blacklist Service Tests', () => {
     await redisClient.quit();
   });
 
-  it('должен добавлять токен в черный список и корректно определять его статус', async () => {
+  it('should add a token to the blacklist and correctly determine its status', async () => {
     const token = 'test-token-123';
     await TokenBlacklistService.blacklistToken(token, 3600);
     const isBlacklisted = await TokenBlacklistService.isBlacklisted(token);
@@ -31,13 +31,13 @@ describe('Redis Cache and Blacklist Service Tests', () => {
     expect(isBlacklisted).toBe(true);
   });
 
-  it('не должен считать токен заблокированным, если его нет в Redis', async () => {
+  it('should not consider a token blacklisted if it is not in Redis', async () => {
     const isBlacklisted =
       await TokenBlacklistService.isBlacklisted('valid-token');
     expect(isBlacklisted).toBe(false);
   });
 
-  it('должен корректно сохранять и получать права роли из кэша Redis', async () => {
+  it('should correctly store and retrieve role permissions from Redis cache', async () => {
     const role = 'admin';
     const permissions = JSON.stringify(['read', 'write', 'delete']);
 
@@ -48,7 +48,7 @@ describe('Redis Cache and Blacklist Service Tests', () => {
     expect(JSON.parse(cached as string)).toContain('write');
   });
 
-  it('должен корректно инвалидировать (сбрасывать) кэш роли', async () => {
+  it('should correctly invalidate (clear) role cache', async () => {
     const role = 'manager';
     await redisClient.set(`role:${role}`, JSON.stringify(['read', 'update']));
 

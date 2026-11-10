@@ -10,19 +10,19 @@ export class RbacError extends Error {
 }
 
 export class InvalidTokenError extends RbacError {
-  constructor(message: string = 'Неверный, отозванный или просроченный токен') {
+  constructor(message: string = 'Invalid, revoked, or expired token') {
     super(message, 401);
   }
 }
 
 export class AccessDeniedError extends RbacError {
-  constructor(message: string = 'Доступ запрещен: недостаточно прав') {
+  constructor(message: string = 'Access denied: insufficient permissions') {
     super(message, 403);
   }
 }
 
 export class RoleNotFoundError extends RbacError {
-  constructor(message: string = 'Указанная роль не найдена') {
+  constructor(message: string = 'Specified role not found') {
     super(message, 404);
   }
 }

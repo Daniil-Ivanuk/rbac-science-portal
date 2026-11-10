@@ -13,7 +13,7 @@ server.post('/api/login', async () => {
   const payload = {
     userId: '123',
     username: 'ivan_researcher',
-    name: 'Иван Иванов',
+    name: 'Ivan Ivanov',
     roles: ['Researcher'],
     permissions: ['read:articles'],
   };
@@ -31,12 +31,12 @@ server.get(
     if (!(await RbacGuard.hasPermission(user, 'read:articles'))) {
       return reply
         .status(403)
-        .send({error: 'Недостаточно прав для чтения статей'});
+        .send({error: 'Insufficient permissions to read articles'});
     }
 
     return {
-      message: `Добро пожаловать, ${user.name}! Вот список научных статей...`,
-      data: [{id: 1, title: 'Анализ производительности Fastify'}],
+      message: `Welcome, ${user.name}! Here is the list of scientific articles...`,
+      data: [{id: 1, title: 'Fastify Performance Analysis'}],
     };
   },
 );
@@ -56,7 +56,7 @@ server.post(
 
     await TokenBlacklistService.blacklistToken(token, expiresInSeconds);
 
-    return {message: 'Сеанс успешно завершен. Токен заблокирован.'};
+    return {message: 'Session ended successfully. Token has been blacklisted.'};
   },
 );
 
@@ -65,7 +65,7 @@ const start = async () => {
     await RoleCacheService.syncRolesToCache();
 
     await server.listen({port: 3000, host: '0.0.0.0'});
-    console.log('Научный портал запущен на http://localhost:3000');
+    console.log('Science portal is running at http://localhost:3000');
   } catch (err) {
     server.log.error(err);
     process.exit(1);

@@ -1,6 +1,31 @@
-describe('CI/CD Pipeline', () => {
-  it('must successfully run the basic test', () => {
-    const isPipelineConfigured = true;
-    expect(isPipelineConfigured).toBe(true);
+import {describe, it, expect} from '@jest/globals';
+import {
+  JwtService,
+  RoleService,
+  RoleCacheService,
+  TokenBlacklistService,
+  RbacGuard,
+  verifyTokenHook,
+  initRbacModule,
+  InvalidTokenError,
+  AccessDeniedError,
+  RoleNotFoundError,
+} from '../src/index.js';
+
+describe('CI/CD Pipeline Smoke & Sanity Tests', () => {
+  it('should successfully import and expose all core RBAC module exports', () => {
+    expect(JwtService).toBeDefined();
+    expect(RoleService).toBeDefined();
+    expect(RoleCacheService).toBeDefined();
+    expect(TokenBlacklistService).toBeDefined();
+    expect(RbacGuard).toBeDefined();
+    expect(verifyTokenHook).toBeDefined();
+    expect(initRbacModule).toBeDefined();
+  });
+
+  it('should expose custom error classes with correct hierarchy', () => {
+    expect(new InvalidTokenError()).toBeInstanceOf(Error);
+    expect(new AccessDeniedError()).toBeInstanceOf(Error);
+    expect(new RoleNotFoundError()).toBeInstanceOf(Error);
   });
 });

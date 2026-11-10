@@ -5,6 +5,7 @@ export type {JwtPayload} from './core/jwt.service.js';
 
 export {JwtService} from './core/jwt.service.js';
 export {RoleService} from './core/role.service.js';
+export {RbacGuard} from './core/rbac.guard.js';
 export {RoleCacheService} from './cache/role.cache.service.js';
 export {TokenBlacklistService} from './cache/token.blacklist.service.js';
 
@@ -31,19 +32,19 @@ export interface RbacModuleConfig {
 }
 
 export const initRbacModule = async (config: RbacModuleConfig) => {
-  console.log('[RBAC Module] Начало инициализации...');
+  console.log('[RBAC Module] Starting initialization...');
 
   if (!config.jwtSecret) {
-    throw new Error('[RBAC Module] Ошибка: не передан jwtSecret.');
+    throw new Error('[RBAC Module] Error: jwtSecret is required.');
   }
   if (!config.redisClient) {
     throw new Error(
-      '[RBAC Module] Ошибка: не передан инстанс Redis (ioredis).',
+      '[RBAC Module] Error: Redis (ioredis) instance is required.',
     );
   }
   if (!config.dbClient) {
     throw new Error(
-      '[RBAC Module] Ошибка: не передан инстанс БД (PrismaClient).',
+      '[RBAC Module] Error: DB (PrismaClient) instance is required.',
     );
   }
 
@@ -53,15 +54,17 @@ export const initRbacModule = async (config: RbacModuleConfig) => {
   RbacContext.isInitialized = true;
 
   try {
-    // Внимание: внутри RoleCacheService теперь нужно использовать RbacContext.db и RbacContext.redis,
-    // а не импортировать их из локальных файлов модуля.
+    // Note: RoleCacheService should now use RbacContext.db and RbacContext.redis
+    // instead of importing them from local module files.
     const {RoleCacheService} = await import('./cache/role.cache.service.js');
     await RoleCacheService.syncRolesToCache();
 
-    console.log('[RBAC Module] Успешно инициализирован: роли загружены в кэш.');
+    console.log(
+      '[RBAC Module] Successfully initialized: roles loaded into cache.',
+    );
   } catch (error) {
     console.error(
-      '[RBAC Module] Критическая ошибка при синхронизации кэша ролей:',
+      '[RBAC Module] Critical error while synchronizing role cache:',
       error,
     );
     throw error;

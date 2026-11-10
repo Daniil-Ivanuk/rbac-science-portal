@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Начинаем заполнение базы данных (seeding)...');
+  console.log('Starting database seeding...');
 
   const readArticles = await prisma.permission.upsert({
     where: { name: 'read:articles' },
@@ -20,13 +20,13 @@ async function main() {
   const adminRole = await prisma.role.upsert({
     where: { name: 'Admin' },
     update: {},
-    create: { name: 'Admin', description: 'Администратор системы' },
+    create: { name: 'Admin', description: 'System administrator' },
   });
 
   const researcherRole = await prisma.role.upsert({
     where: { name: 'Researcher' },
     update: {},
-    create: { name: 'Researcher', description: 'Научный сотрудник' },
+    create: { name: 'Researcher', description: 'Scientific researcher' },
   });
 
   for (const perm of [readArticles, writeArticles]) {
@@ -47,7 +47,7 @@ async function main() {
     create: { roleId: researcherRole.id, permissionId: readArticles.id },
   });
 
-  console.log('База данных успешно заполнена базовыми ролями и правами!');
+  console.log('Database successfully seeded with default roles and permissions!');
 }
 
 main()

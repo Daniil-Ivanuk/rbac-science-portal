@@ -7,7 +7,7 @@ const DB_SERVER = process.env.DB_SERVER;
 
 if (!DB_USER || !DB_PASSWORD || !DB_NAME || !DB_SERVER) {
   throw new Error(
-    'Критическая ошибка: Не заданы параметры подключения к БД в переменных окружения (DB_USER, DB_PASSWORD, DB_NAME, DB_SERVER).',
+    'Critical error: Database connection parameters are not set in environment variables (DB_USER, DB_PASSWORD, DB_NAME, DB_SERVER).',
   );
 }
 
