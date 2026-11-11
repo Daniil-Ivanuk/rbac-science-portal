@@ -6,6 +6,8 @@ import {
   TokenBlacklistService,
   RbacGuard,
   verifyTokenHook,
+  expressAuthMiddleware,
+  authenticateRequest,
   initRbacModule,
   InvalidTokenError,
   AccessDeniedError,
@@ -20,6 +22,8 @@ describe('CI/CD Pipeline Smoke & Sanity Tests', () => {
     expect(TokenBlacklistService).toBeDefined();
     expect(RbacGuard).toBeDefined();
     expect(verifyTokenHook).toBeDefined();
+    expect(expressAuthMiddleware).toBeDefined();
+    expect(authenticateRequest).toBeDefined();
     expect(initRbacModule).toBeDefined();
   });
 

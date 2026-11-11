@@ -16,7 +16,14 @@ export {
   RoleNotFoundError,
 } from './core/errors.js';
 
-export {verifyTokenHook} from './http/auth.hook.js';
+export {
+  verifyTokenHook,
+  expressAuthMiddleware,
+  authenticateRequest,
+  type HttpRequestLike,
+  type HttpResponseLike,
+  type NextFunctionLike,
+} from './http/auth.hook.js';
 
 export class RbacContext {
   static jwtSecret: string;
