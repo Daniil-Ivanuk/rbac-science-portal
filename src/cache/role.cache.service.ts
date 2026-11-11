@@ -105,8 +105,11 @@ export class RoleCacheService {
             `role:${role.name}`,
             JSON.stringify(permissions),
           );
-        } catch {
-          // ignore cache warming error
+        } catch (warmingError) {
+          console.warn(
+            `[RoleCacheService] Failed to warm up Redis cache for role "${role.name}":`,
+            warmingError instanceof Error ? warmingError.message : warmingError,
+          );
         }
       }
 
