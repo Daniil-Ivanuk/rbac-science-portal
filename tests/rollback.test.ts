@@ -52,4 +52,14 @@ describe('Prisma Rollback Mechanism Tests', () => {
     expect(userRolesIndex).toBeLessThan(usersIndex);
     expect(userRolesIndex).toBeLessThan(rolesIndex);
   });
+
+  it('should reject malicious migration names with path traversal or injection characters', async () => {
+    await expect(
+      rollbackMigration({target: '../../malicious-path'}),
+    ).rejects.toThrow(/\[Security Guard\]/);
+
+    await expect(
+      rollbackMigration({target: "test'; DROP TABLE Users; --"}),
+    ).rejects.toThrow(/\[Security Guard\]/);
+  });
 });

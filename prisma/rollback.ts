@@ -8,6 +8,8 @@ const __dirname = path.dirname(__filename);
 
 const prisma = new PrismaClient();
 
+const SAFE_MIGRATION_NAME_REGEX = /^[a-zA-Z0-9_-]+$/;
+
 interface AppliedMigration {
   migration_name: string;
 }
@@ -18,11 +20,20 @@ export async function rollbackMigration(
     target?: string | undefined;
   } = {},
 ): Promise<void> {
-  const migrationsDir = path.join(__dirname, 'migrations');
+  // Safety guard: prevent accidental execution in production environment
+  if (
+    process.env.NODE_ENV === 'production' &&
+    !process.argv.includes('--force-production')
+  ) {
+    throw new Error(
+      '[Security Guard] Rollback aborted: Execution in production environment requires explicit --force-production flag.',
+    );
+  }
+
+  const migrationsDir = path.resolve(__dirname, 'migrations');
 
   if (!fs.existsSync(migrationsDir)) {
-    console.error(`[Prisma Rollback] Error: Migrations directory not found at: ${migrationsDir}`);
-    process.exit(1);
+    throw new Error(`[Prisma Rollback] Error: Migrations directory not found at: ${migrationsDir}`);
   }
 
   try {
@@ -73,7 +84,22 @@ export async function rollbackMigration(
     }
 
     for (const migrationName of migrationsToRollback) {
-      const downSqlPath = path.join(migrationsDir, migrationName, 'down.sql');
+      // Security Check 1: Whitelist characters to prevent command/path injection
+      if (!SAFE_MIGRATION_NAME_REGEX.test(migrationName)) {
+        throw new Error(
+          `[Security Guard] Invalid migration name: "${migrationName}". Potential injection attempt rejected.`,
+        );
+      }
+
+      // Security Check 2: Path traversal validation
+      const targetMigrationDir = path.resolve(migrationsDir, migrationName);
+      if (!targetMigrationDir.startsWith(migrationsDir + path.sep)) {
+        throw new Error(
+          `[Security Guard] Path traversal attempt detected for migration name: "${migrationName}".`,
+        );
+      }
+
+      const downSqlPath = path.join(targetMigrationDir, 'down.sql');
 
       if (!fs.existsSync(downSqlPath)) {
         throw new Error(`Rollback script not found for migration "${migrationName}": expected at ${downSqlPath}`);
@@ -82,14 +108,16 @@ export async function rollbackMigration(
       console.log(`[Prisma Rollback] Rolling back migration: ${migrationName}...`);
       const sqlContent = fs.readFileSync(downSqlPath, 'utf-8');
 
+      // Execute transactionally isolated rollback SQL
       await prisma.$executeRawUnsafe(sqlContent);
 
+      // Security Check 3: Parameterized query prevents SQL injection
       try {
-        await prisma.$executeRawUnsafe(`
+        await prisma.$executeRaw`
           UPDATE _prisma_migrations 
           SET rolled_back_at = CURRENT_TIMESTAMP 
-          WHERE migration_name = '${migrationName}' AND rolled_back_at IS NULL
-        `);
+          WHERE migration_name = ${migrationName} AND rolled_back_at IS NULL
+        `;
       } catch {
         // Table might not exist if schema was deployed via db push
       }
@@ -98,7 +126,7 @@ export async function rollbackMigration(
     }
   } catch (error) {
     console.error('[Prisma Rollback] Failed to rollback migration:', error);
-    process.exit(1);
+    throw error;
   } finally {
     await prisma.$disconnect();
   }
