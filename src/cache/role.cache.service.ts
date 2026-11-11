@@ -19,15 +19,24 @@ export class RoleCacheService {
         },
       });
 
+      if (!RbacContext.redis) return;
+
       for (const role of roles) {
         const permissionNames = role.permissions.map(
           (rp: {permission: {name: string}}) => rp.permission.name,
         );
 
-        await RbacContext.redis.set(
-          `role:${role.name}`,
-          JSON.stringify(permissionNames),
-        );
+        try {
+          await RbacContext.redis.set(
+            `role:${role.name}`,
+            JSON.stringify(permissionNames),
+          );
+        } catch (redisError) {
+          console.warn(
+            `[RoleCacheService] Failed to cache role "${role.name}" in Redis:`,
+            redisError instanceof Error ? redisError.message : redisError,
+          );
+        }
       }
     } catch (error) {
       console.error('[RoleCacheService] Error reading roles from DB:', error);
@@ -40,23 +49,79 @@ export class RoleCacheService {
       return [];
     }
 
+    let cached: string | null = null;
+    let isRedisAvailable = false;
+
+    if (RbacContext.redis) {
+      try {
+        cached = await RbacContext.redis.get(`role:${roleName}`);
+        isRedisAvailable = true;
+      } catch (error) {
+        console.warn(
+          `[RoleCacheService] Redis unavailable while reading role "${roleName}":`,
+          error instanceof Error ? error.message : error,
+        );
+      }
+    }
+
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (error) {
+        console.error(
+          `[RoleCacheService] Error parsing cache for role ${roleName}:`,
+          error,
+        );
+      }
+    }
+
+    if (!RbacContext.db) {
+      return [];
+    }
+
     try {
-      const cached = await RbacContext.redis.get(`role:${roleName}`);
-      if (!cached) {
+      const role = await RbacContext.db.role.findUnique({
+        where: {name: roleName},
+        include: {
+          permissions: {
+            include: {
+              permission: true,
+            },
+          },
+        },
+      });
+
+      if (!role) {
         return [];
       }
-      return JSON.parse(cached);
-    } catch (error) {
+
+      const permissions = role.permissions.map(
+        (rp: {permission: {name: string}}) => rp.permission.name,
+      );
+
+      if (isRedisAvailable && RbacContext.redis) {
+        try {
+          await RbacContext.redis.set(
+            `role:${role.name}`,
+            JSON.stringify(permissions),
+          );
+        } catch {
+          // ignore cache warming error
+        }
+      }
+
+      return permissions;
+    } catch (dbError) {
       console.error(
-        `[RoleCacheService] Error parsing cache for role ${roleName}:`,
-        error,
+        `[RoleCacheService] Fallback to DB failed for role "${roleName}":`,
+        dbError,
       );
       return [];
     }
   }
 
   static async invalidateRoleCache(roleName: string): Promise<void> {
-    if (!RbacContext.isInitialized) return;
+    if (!RbacContext.isInitialized || !RbacContext.redis) return;
 
     try {
       await RbacContext.redis.del(`role:${roleName}`);
@@ -72,7 +137,7 @@ export class RoleCacheService {
     roleName: string,
     permissions: string[],
   ): Promise<void> {
-    if (!RbacContext.isInitialized) return;
+    if (!RbacContext.isInitialized || !RbacContext.redis) return;
 
     try {
       await RbacContext.redis.set(

@@ -54,8 +54,6 @@ export const initRbacModule = async (config: RbacModuleConfig) => {
   RbacContext.isInitialized = true;
 
   try {
-    // Note: RoleCacheService should now use RbacContext.db and RbacContext.redis
-    // instead of importing them from local module files.
     const {RoleCacheService} = await import('./cache/role.cache.service.js');
     await RoleCacheService.syncRolesToCache();
 
@@ -63,10 +61,9 @@ export const initRbacModule = async (config: RbacModuleConfig) => {
       '[RBAC Module] Successfully initialized: roles loaded into cache.',
     );
   } catch (error) {
-    console.error(
-      '[RBAC Module] Critical error while synchronizing role cache:',
+    console.warn(
+      '[RBAC Module] Warning: Initial role cache synchronization encountered an issue. Fallback to direct DB queries active:',
       error,
     );
-    throw error;
   }
 };
