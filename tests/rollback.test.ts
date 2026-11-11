@@ -1,6 +1,6 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import fs from 'fs';
+import path from 'path';
+import {fileURLToPath} from 'url';
 import {describe, it, expect} from '@jest/globals';
 import {rollbackMigration} from '../prisma/rollback.js';
 
@@ -18,8 +18,8 @@ describe('Prisma Rollback Mechanism Tests', () => {
   it('should have a corresponding down.sql file for each migration directory', () => {
     const migrationDirs = fs
       .readdirSync(migrationsDir, {withFileTypes: true})
-      .filter((d) => d.isDirectory())
-      .map((d) => d.name);
+      .filter((d: fs.Dirent) => d.isDirectory())
+      .map((d: fs.Dirent) => d.name);
 
     expect(migrationDirs.length).toBeGreaterThan(0);
 
@@ -40,7 +40,6 @@ describe('Prisma Rollback Mechanism Tests', () => {
     );
     const content = fs.readFileSync(downSqlPath, 'utf-8');
 
-    // Junction tables (RolePermissions, UserRoles) must be dropped before base tables (Roles, Users, Permissions)
     const rolePermissionsIndex = content.indexOf('[dbo].[RolePermissions]');
     const userRolesIndex = content.indexOf('[dbo].[UserRoles]');
     const permissionsIndex = content.indexOf('[dbo].[Permissions]');
