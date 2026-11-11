@@ -11,8 +11,8 @@ jest.unstable_mockModule('ioredis', async () => {
 });
 
 const {TokenBlacklistService} =
-  await import('../src/cache/token.blacklist.service');
-const {redisClient} = await import('../src/cache/redis.client');
+  await import('../src/cache/token.blacklist.service.js');
+const {redisClient} = await import('../src/cache/redis.client.js');
 
 describe('Redis Cache and Blacklist Service Tests', () => {
   beforeEach(async () => {

@@ -20,7 +20,6 @@ export async function rollbackMigration(
     target?: string | undefined;
   } = {},
 ): Promise<void> {
-  // Safety guard: prevent accidental execution in production environment
   if (
     process.env.NODE_ENV === 'production' &&
     !process.argv.includes('--force-production')
@@ -84,14 +83,12 @@ export async function rollbackMigration(
     }
 
     for (const migrationName of migrationsToRollback) {
-      // Security Check 1: Whitelist characters to prevent command/path injection
       if (!SAFE_MIGRATION_NAME_REGEX.test(migrationName)) {
         throw new Error(
           `[Security Guard] Invalid migration name: "${migrationName}". Potential injection attempt rejected.`,
         );
       }
 
-      // Security Check 2: Path traversal validation
       const targetMigrationDir = path.resolve(migrationsDir, migrationName);
       if (!targetMigrationDir.startsWith(migrationsDir + path.sep)) {
         throw new Error(
@@ -108,10 +105,8 @@ export async function rollbackMigration(
       console.log(`[Prisma Rollback] Rolling back migration: ${migrationName}...`);
       const sqlContent = fs.readFileSync(downSqlPath, 'utf-8');
 
-      // Execute transactionally isolated rollback SQL
       await prisma.$executeRawUnsafe(sqlContent);
 
-      // Security Check 3: Parameterized query prevents SQL injection
       try {
         await prisma.$executeRaw`
           UPDATE _prisma_migrations 
@@ -119,7 +114,7 @@ export async function rollbackMigration(
           WHERE migration_name = ${migrationName} AND rolled_back_at IS NULL
         `;
       } catch {
-        // Table might not exist if schema was deployed via db push
+
       }
 
       console.log(`[Prisma Rollback] Successfully rolled back migration: ${migrationName}`);
