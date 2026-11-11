@@ -2,14 +2,12 @@ BEGIN TRY
 
 BEGIN TRAN;
 
--- 1. Drop junction tables with foreign key constraints first
 IF OBJECT_ID(N'[dbo].[RolePermissions]', N'U') IS NOT NULL
     DROP TABLE [dbo].[RolePermissions];
 
 IF OBJECT_ID(N'[dbo].[UserRoles]', N'U') IS NOT NULL
     DROP TABLE [dbo].[UserRoles];
 
--- 2. Drop primary tables
 IF OBJECT_ID(N'[dbo].[Permissions]', N'U') IS NOT NULL
     DROP TABLE [dbo].[Permissions];
 

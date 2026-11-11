@@ -1,6 +1,6 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { PrismaClient } from '@prisma/client';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,7 +12,12 @@ interface AppliedMigration {
   migration_name: string;
 }
 
-export async function rollbackMigration(options: { all?: boolean; target?: string } = {}): Promise<void> {
+export async function rollbackMigration(
+  options: {
+    all?: boolean | undefined;
+    target?: string | undefined;
+  } = {},
+): Promise<void> {
   const migrationsDir = path.join(__dirname, 'migrations');
 
   if (!fs.existsSync(migrationsDir)) {
@@ -26,7 +31,6 @@ export async function rollbackMigration(options: { all?: boolean; target?: strin
     if (options.target) {
       migrationsToRollback = [options.target];
     } else {
-      // Check if _prisma_migrations table exists
       const tableCheck = await prisma.$queryRawUnsafe<Array<{ exists: number }>>(`
         SELECT COUNT(*) as [exists] 
         FROM sys.tables 
@@ -52,11 +56,10 @@ export async function rollbackMigration(options: { all?: boolean; target?: strin
           ? applied.map((m) => m.migration_name) 
           : [applied[0]!.migration_name];
       } else {
-        // Fallback: discover available migrations with down.sql from disk in reverse order
         const dirs = fs
           .readdirSync(migrationsDir, { withFileTypes: true })
-          .filter((d) => d.isDirectory() && fs.existsSync(path.join(migrationsDir, d.name, 'down.sql')))
-          .map((d) => d.name)
+          .filter((d: fs.Dirent) => d.isDirectory() && fs.existsSync(path.join(migrationsDir, d.name, 'down.sql')))
+          .map((d: fs.Dirent) => d.name)
           .sort()
           .reverse();
 
@@ -79,10 +82,8 @@ export async function rollbackMigration(options: { all?: boolean; target?: strin
       console.log(`[Prisma Rollback] Rolling back migration: ${migrationName}...`);
       const sqlContent = fs.readFileSync(downSqlPath, 'utf-8');
 
-      // Execute rollback SQL in transaction
       await prisma.$executeRawUnsafe(sqlContent);
 
-      // Update _prisma_migrations record if table exists
       try {
         await prisma.$executeRawUnsafe(`
           UPDATE _prisma_migrations 
@@ -103,7 +104,6 @@ export async function rollbackMigration(options: { all?: boolean; target?: strin
   }
 }
 
-// CLI entry point
 const isDirectExecution = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 
 if (isDirectExecution) {
