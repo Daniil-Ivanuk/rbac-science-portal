@@ -15,7 +15,7 @@ describe('RBAC and JWT Core Tests', () => {
   const mockUser: JwtPayload = {
     userId: '123e4567-e89b-12d3-a456-426614174000',
     username: 'researcher_ivan',
-    name: 'Иван Исследователь',
+    name: 'Ivan Researcher',
     roles: ['Researcher'],
     permissions: ['read:articles', 'write:articles'],
   };
@@ -27,7 +27,7 @@ describe('RBAC and JWT Core Tests', () => {
 
     if (!process.env.JWT_SECRET) {
       throw new Error(
-        '[Test Setup] Критическая ошибка: JWT_SECRET не задан в окружении!',
+        '[Test Setup] Critical error: JWT_SECRET is not set in the environment!',
       );
     }
 
@@ -45,7 +45,7 @@ describe('RBAC and JWT Core Tests', () => {
     );
   });
 
-  it('должен успешно генерировать и верифицировать JWT токен', () => {
+  it('should successfully generate and verify a JWT token', () => {
     const token = JwtService.generateToken(mockUser);
     expect(typeof token).toBe('string');
     expect(token.length).toBeGreaterThan(10);
@@ -57,13 +57,13 @@ describe('RBAC and JWT Core Tests', () => {
     expect(decoded.permissions).toEqual(mockUser.permissions);
   });
 
-  it('должен выбрасывать ошибку при валидации неверного токена', () => {
+  it('should throw an error when validating an invalid token', () => {
     expect(() => {
       JwtService.verifyToken('invalid.token.string');
     }).toThrow('Invalid or expired JWT token');
   });
 
-  it('должен корректно проверять права доступа (RbacGuard)', async () => {
+  it('should correctly check access permissions (RbacGuard)', async () => {
     await expect(
       RbacGuard.hasPermission(mockUser, 'read:articles'),
     ).resolves.toBe(true);

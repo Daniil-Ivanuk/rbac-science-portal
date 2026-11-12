@@ -14,26 +14,37 @@ services:
       - db-network
       - cache-network
     depends_on:
-      - mssql-db
-      - redis-db
+      mssql-db:
+        condition: service_started
+      redis-db:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/host-src:ro
+      - ./prisma:/app/host-prisma:ro
     env_file:
       - .env
     environment:
       - DB_SERVER=mssql-db
+      - DB_NAME=SciencePortalDb
       - REDIS_HOST=redis-db
       - DATABASE_URL=sqlserver://mssql-db:1433;database=SciencePortalDb;user=sa;password=${DB_PASSWORD};encrypt=true;trustServerCertificate=true
     restart: unless-stopped
-    
+
   redis-db:
     image: redis:7-alpine
     container_name: rbac-redis-db
     ports:
       - "6379:6379"
     networks:
-      - cache-network 
+      - cache-network
     volumes:
       - redis-data:/data
     command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
 
   mssql-db:

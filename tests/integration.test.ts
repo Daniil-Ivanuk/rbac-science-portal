@@ -6,6 +6,7 @@ import {
   initRbacModule,
   JwtService,
   RoleService,
+  UserRepository,
   TokenBlacklistService,
   verifyTokenHook,
 } from '../src/index.js';
@@ -13,7 +14,7 @@ import {
 jest.setTimeout(30000);
 
 describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
-  let app: FastifyInstance;
+  let app: FastifyInstance | undefined;
   let testUserId: string | undefined;
   let testRoleId: number | undefined;
   let validToken: string;
@@ -22,19 +23,17 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
   const testUsername = `IntegrationUser_${Date.now()}`;
 
   beforeAll(async () => {
-    // 1. Передаем конфигурацию в инициализатор модуля
     await initRbacModule({
       jwtSecret: process.env.JWT_SECRET || 'test-secret',
       redisClient: redisClient,
       dbClient: prisma,
     });
 
-    const role = await RoleService.createRole(testRoleName, 'Тестовая роль');
+    const role = await RoleService.createRole(testRoleName, 'Test role');
     testRoleId = role.id;
 
-    const user = await prisma.user.create({
-      data: {username: testUsername},
-    });
+    const userRepo = new UserRepository(prisma);
+    const user = await userRepo.create({username: testUsername});
     testUserId = user.id;
 
     await RoleService.assignRoleToUser(testUserId, testRoleId);
@@ -48,7 +47,7 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
         preHandler: [verifyTokenHook([testRoleName]) as any],
       },
       async () => {
-        return {success: true, message: 'Доступ разрешен'};
+        return {success: true, message: 'Access granted'};
       },
     );
 
@@ -73,13 +72,15 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
       await prisma.role.delete({where: {id: testRoleId}});
     }
 
-    await app.close();
+    if (app) {
+      await app.close();
+    }
     await prisma.$disconnect();
     redisClient.quit();
   });
 
-  it('должен пропускать запрос с валидным токеном и правильной ролью', async () => {
-    const response = await app.inject({
+  it('should allow a request with a valid token and the correct role', async () => {
+    const response = await app!.inject({
       method: 'GET',
       url: '/protected',
       headers: {
@@ -90,14 +91,14 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.payload)).toEqual({
       success: true,
-      message: 'Доступ разрешен',
+      message: 'Access granted',
     });
   });
 
-  it('должен блокировать запрос после отзыва (blacklist) токена в Redis', async () => {
+  it('should block a request after revoking (blacklisting) the token in Redis', async () => {
     await TokenBlacklistService.blacklistToken(validToken, 3600);
 
-    const response = await app.inject({
+    const response = await app!.inject({
       method: 'GET',
       url: '/protected',
       headers: {
