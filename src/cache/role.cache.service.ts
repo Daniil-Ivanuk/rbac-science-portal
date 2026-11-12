@@ -1,6 +1,11 @@
-import {RbacContext} from '../index.js';
+import {RbacContext} from '../core/context.js';
+import {RoleRepository} from '../repositories/role.repository.js';
 
 export class RoleCacheService {
+  private static getRoleRepository(): RoleRepository {
+    return new RoleRepository(RbacContext.db);
+  }
+
   static async syncRolesToCache(): Promise<void> {
     if (!RbacContext.isInitialized) {
       throw new Error(
@@ -9,27 +14,16 @@ export class RoleCacheService {
     }
 
     try {
-      const roles = await RbacContext.db.role.findMany({
-        include: {
-          permissions: {
-            include: {
-              permission: true,
-            },
-          },
-        },
-      });
+      const roleRepo = this.getRoleRepository();
+      const roles = await roleRepo.getAllWithPermissions();
 
       if (!RbacContext.redis) return;
 
       for (const role of roles) {
-        const permissionNames = role.permissions.map(
-          (rp: {permission: {name: string}}) => rp.permission.name,
-        );
-
         try {
           await RbacContext.redis.set(
             `role:${role.name}`,
-            JSON.stringify(permissionNames),
+            JSON.stringify(role.permissions),
           );
         } catch (redisError) {
           console.warn(
@@ -66,7 +60,7 @@ export class RoleCacheService {
 
     if (cached) {
       try {
-        return JSON.parse(cached);
+        return JSON.parse(cached) as string[];
       } catch (error) {
         console.error(
           `[RoleCacheService] Error parsing cache for role ${roleName}:`,
@@ -80,34 +74,22 @@ export class RoleCacheService {
     }
 
     try {
-      const role = await RbacContext.db.role.findUnique({
-        where: {name: roleName},
-        include: {
-          permissions: {
-            include: {
-              permission: true,
-            },
-          },
-        },
-      });
+      const roleRepo = this.getRoleRepository();
+      const permissions = await roleRepo.getPermissionsByRoleName(roleName);
 
-      if (!role) {
+      if (!permissions) {
         return [];
       }
-
-      const permissions = role.permissions.map(
-        (rp: {permission: {name: string}}) => rp.permission.name,
-      );
 
       if (isRedisAvailable && RbacContext.redis) {
         try {
           await RbacContext.redis.set(
-            `role:${role.name}`,
+            `role:${roleName}`,
             JSON.stringify(permissions),
           );
         } catch (warmingError) {
           console.warn(
-            `[RoleCacheService] Failed to warm up Redis cache for role "${role.name}":`,
+            `[RoleCacheService] Failed to warm up Redis cache for role "${roleName}":`,
             warmingError instanceof Error ? warmingError.message : warmingError,
           );
         }

@@ -6,6 +6,7 @@ import {
   initRbacModule,
   JwtService,
   RoleService,
+  UserRepository,
   TokenBlacklistService,
   verifyTokenHook,
 } from '../src/index.js';
@@ -13,7 +14,7 @@ import {
 jest.setTimeout(30000);
 
 describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
-  let app: FastifyInstance;
+  let app: FastifyInstance | undefined;
   let testUserId: string | undefined;
   let testRoleId: number | undefined;
   let validToken: string;
@@ -31,9 +32,8 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
     const role = await RoleService.createRole(testRoleName, 'Test role');
     testRoleId = role.id;
 
-    const user = await prisma.user.create({
-      data: {username: testUsername},
-    });
+    const userRepo = new UserRepository(prisma);
+    const user = await userRepo.create({username: testUsername});
     testUserId = user.id;
 
     await RoleService.assignRoleToUser(testUserId, testRoleId);
@@ -72,13 +72,15 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
       await prisma.role.delete({where: {id: testRoleId}});
     }
 
-    await app.close();
+    if (app) {
+      await app.close();
+    }
     await prisma.$disconnect();
     redisClient.quit();
   });
 
   it('should allow a request with a valid token and the correct role', async () => {
-    const response = await app.inject({
+    const response = await app!.inject({
       method: 'GET',
       url: '/protected',
       headers: {
@@ -96,7 +98,7 @@ describe('RBAC Integration Tests (Module -> Redis -> SQL Server)', () => {
   it('should block a request after revoking (blacklisting) the token in Redis', async () => {
     await TokenBlacklistService.blacklistToken(validToken, 3600);
 
-    const response = await app.inject({
+    const response = await app!.inject({
       method: 'GET',
       url: '/protected',
       headers: {

@@ -1,4 +1,4 @@
-import {RbacContext} from '../index.js';
+import {RbacContext} from '../core/context.js';
 import {redisClient} from './redis.client.js';
 
 export class TokenBlacklistService {

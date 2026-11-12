@@ -15,9 +15,10 @@
     "build": "tsc -p tsconfig.build.json",
     "prepare": "husky",
     "postinstall": "prisma skills sync || exit 0",
+    "prisma:bootstrap": "tsx prisma/bootstrap.ts",
     "prisma:migrate": "prisma migrate deploy",
-    "prisma:rollback": "npx tsx prisma/rollback.ts",
-    "prisma:seed": "npx tsx prisma/seed.ts"
+    "prisma:rollback": "tsx prisma/rollback.ts",
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "keywords": [
     "rbac",
@@ -47,6 +48,7 @@
     "prettier": "^3.9.9",
     "prisma": "^6.19.3",
     "ts-jest": "^29.4.14",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1"
   },

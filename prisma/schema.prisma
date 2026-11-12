@@ -8,12 +8,30 @@ generator client {
 }
 
 model User {
-  id       String     @id @default(uuid()) @db.UniqueIdentifier
-  username String     @unique @db.NVarChar(255)
-  isActive Boolean    @default(true)
-  roles    UserRole[]
+  id           String     @id @default(uuid()) @db.UniqueIdentifier
+  username     String     @unique @db.NVarChar(255)
+  passwordHash String?    @db.NVarChar(255)
+  fullName     String?    @db.NVarChar(255)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  roles        UserRole[]
+  articles     Article[]
 
   @@map("Users")
+}
+
+model Article {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.NVarChar(255)
+  content     String   @db.NVarChar(Max)
+  isPublished Boolean  @default(false)
+  authorId    String   @db.UniqueIdentifier
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("Articles")
 }
 
 model Role {

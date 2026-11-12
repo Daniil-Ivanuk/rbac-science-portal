@@ -1,19 +1,48 @@
 import type {Redis} from 'ioredis';
 import type {PrismaClient} from '@prisma/client';
+import {RbacContext} from './core/context.js';
 
 export type {JwtPayload} from './core/jwt.service.js';
 
+export {RbacContext};
 export {JwtService} from './core/jwt.service.js';
 export {RoleService} from './core/role.service.js';
+export {
+  AuthService,
+  type RegisterInput,
+  type LoginResult,
+} from './core/auth.service.js';
+export {ArticleService} from './core/article.service.js';
 export {RbacGuard} from './core/rbac.guard.js';
+export {hashPassword, verifyPassword} from './core/security.js';
 export {RoleCacheService} from './cache/role.cache.service.js';
 export {TokenBlacklistService} from './cache/token.blacklist.service.js';
 
 export {
+  UserRepository,
+  RoleRepository,
+  PermissionRepository,
+  ArticleRepository,
+  type UserRecord,
+  type UserStoreRecord,
+  type CreateUserInput,
+  type UserAccessConfig,
+  type RoleRecord,
+  type RoleWithPermissions,
+  type PermissionRecord,
+  type ArticleRecord,
+  type CreateArticleInput,
+  type UpdateArticleInput,
+} from './repositories/index.js';
+
+export {
   RbacError,
+  ValidationError,
   InvalidTokenError,
   AccessDeniedError,
   RoleNotFoundError,
+  EntityNotFoundError,
+  ConflictError,
 } from './core/errors.js';
 
 export {
@@ -24,13 +53,6 @@ export {
   type HttpResponseLike,
   type NextFunctionLike,
 } from './http/auth.hook.js';
-
-export class RbacContext {
-  static jwtSecret: string;
-  static redis: Redis;
-  static db: PrismaClient;
-  static isInitialized: boolean = false;
-}
 
 export interface RbacModuleConfig {
   jwtSecret: string;
